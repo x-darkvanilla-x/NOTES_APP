@@ -66,7 +66,7 @@ export default function DashboardPage() {
 
     const data = await res.json();
     if (data.success) {
-      alert("✅ Note saved successfully!");
+      setNewNote({ title: "", content: "" });
       setShowCreateNote(false);
       fetchNotes();
     } else {
@@ -121,7 +121,6 @@ export default function DashboardPage() {
     const data = await res.json();
 
     if (data.success) {
-      alert("🗑️ Note deleted!");
       fetchNotes();
     } else {
       alert(`❌ Failed: ${data.message}`);
