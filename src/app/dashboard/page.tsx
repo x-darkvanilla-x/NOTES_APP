@@ -46,7 +46,8 @@ export default function DashboardPage() {
       console.log("Notes:", data.notes);
       setNotes(data.notes); // store in state
     } else {
-      alert(`❌ Error: ${data.message}`);
+      localStorage.removeItem("token");
+      router.push("/");
     }
   };
 
@@ -70,7 +71,8 @@ export default function DashboardPage() {
       setShowCreateNote(false);
       fetchNotes();
     } else {
-      alert(`❌ Error: ${data.message}`);
+      localStorage.removeItem("token");
+      router.push("/");
     }
   };
 
@@ -83,6 +85,7 @@ export default function DashboardPage() {
 
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
+    console.log("Token:", token);
     if (!token) return;
 
     const res = await fetch("/api/me", {
@@ -96,7 +99,8 @@ export default function DashboardPage() {
     if (data.success) {
       setUser(data.user);
     } else {
-      console.error("Error:", data.message);
+      localStorage.removeItem("token");
+      router.push("/");
     }
   };
 
@@ -123,7 +127,8 @@ export default function DashboardPage() {
     if (data.success) {
       fetchNotes();
     } else {
-      alert(`❌ Failed: ${data.message}`);
+      localStorage.removeItem("token");
+      router.push("/");
     }
   };
 
