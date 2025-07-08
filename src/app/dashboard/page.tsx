@@ -24,7 +24,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [showCreateNote, setShowCreateNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: "", content: "" });
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
 
@@ -111,16 +110,16 @@ export default function DashboardPage() {
 
   const deleteNote = async (noteId: string) => {
     const token = localStorage.getItem("token");
-  
+
     const res = await fetch(`/api/notes/${noteId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-  
+
     const data = await res.json();
-  
+
     if (data.success) {
       alert("🗑️ Note deleted!");
       fetchNotes();
@@ -128,7 +127,14 @@ export default function DashboardPage() {
       alert(`❌ Failed: ${data.message}`);
     }
   };
-  
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -179,37 +185,35 @@ export default function DashboardPage() {
         </button>
 
         <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800">Notes</h2>
-            {notes.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No notes yet. Create your first note!
-              </div>
-            ) : (
-              notes.map((note) => (
-                <div
-                  key={note._id}
-                  className="bg-white rounded-lg shadow-sm p-4 border"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-gray-800">
-                      {note.title}
-                    </h3>
-                    <button
-                      onClick={() => deleteNote(note._id)}
-                      className="text-red-500 hover:text-red-600 p-1"
-                      disabled={loading}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-2">{note.content}</p>
-                  <p className="text-xs text-gray-400">
-                    Created: {new Date(note.createdAt).toLocaleDateString()}
-                  </p>
+          <h2 className="text-xl font-semibold text-gray-800">Notes</h2>
+          {notes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No notes yet. Create your first note!
+            </div>
+          ) : (
+            notes.map((note) => (
+              <div
+                key={note._id}
+                className="bg-white rounded-lg shadow-sm p-4 border"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-800">{note.title}</h3>
+                  <button
+                    onClick={() => deleteNote(note._id)}
+                    className="text-red-500 hover:text-red-600 p-1"
+                    disabled={loading}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-              ))
-            )}
-          </div>
+                <p className="text-gray-600 text-sm mb-2">{note.content}</p>
+                <p className="text-xs text-gray-400">
+                  Created: {new Date(note.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {showCreateNote && (
@@ -259,7 +263,6 @@ export default function DashboardPage() {
                   onClick={() => {
                     setShowCreateNote(false);
                     setNewNote({ title: "", content: "" });
-                    setError(null);
                   }}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-lg"
                 >
