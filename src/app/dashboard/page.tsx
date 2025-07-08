@@ -158,6 +158,10 @@ export default function DashboardPage() {
     }
   };
 
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+  
   if (!user) {
     return (
       <div className="flex items-center justify-center h-screen">
