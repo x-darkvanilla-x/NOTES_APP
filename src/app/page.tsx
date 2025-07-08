@@ -5,6 +5,8 @@ import Image from "next/image";
 
 import { useRouter } from "next/navigation";
 
+import { signIn } from "next-auth/react";
+
 const NoteApp: React.FC = () => {
   const router = useRouter();
 
@@ -185,7 +187,11 @@ const NoteApp: React.FC = () => {
     }
   };
 
-  const handleGoogleAuth = async () => {};
+  const handleGoogleAuth = async () => {
+    signIn("google", {
+      callbackUrl: "/dashboard",
+    });
+  };
 
   if (currentView === "login") {
     return (

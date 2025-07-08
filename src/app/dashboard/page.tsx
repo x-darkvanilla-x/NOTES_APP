@@ -4,11 +4,15 @@ import { Trash2, Plus, LogOut, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { useSession } from "next-auth/react";
+import { signToken } from "@/lib/jwt";
+
 interface User {
   id: string;
   name: string;
   email: string;
   authMethod: "email" | "google";
+  image: string;
 }
 
 interface Note {
@@ -19,6 +23,8 @@ interface Note {
 }
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+
   const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
@@ -43,7 +49,6 @@ export default function DashboardPage() {
 
     const data = await res.json();
     if (data.success) {
-      console.log("Notes:", data.notes);
       setNotes(data.notes); // store in state
     } else {
       localStorage.removeItem("token");
@@ -60,8 +65,8 @@ export default function DashboardPage() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        title: "My First Note",
-        content: "This is the content of the note.",
+        title: newNote.title,
+        content: newNote.content,
       }),
     });
 
@@ -84,9 +89,33 @@ export default function DashboardPage() {
   }
 
   const fetchUser = async () => {
+    // Case 1: Google login (next-auth)
+    if (session?.user?.email) {
+      const res = await fetch("/api/me", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: session.user.email }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem("token", data.token);
+      } else {
+        router.push("/");
+      }
+      return;
+    }
+
+    // Case 2: Email login (JWT from localStorage)
     const token = localStorage.getItem("token");
-    console.log("Token:", token);
-    if (!token) return;
+
+    if (!token) {
+      router.push("/");
+      return;
+    }
 
     const res = await fetch("/api/me", {
       headers: {
@@ -95,7 +124,6 @@ export default function DashboardPage() {
     });
 
     const data = await res.json();
-
     if (data.success) {
       setUser(data.user);
     } else {
@@ -105,12 +133,10 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    fetchNotes();
-  }, []);
+    if (status !== "loading") {
+      fetchUser();
+    }
+  }, [status]);
 
   const deleteNote = async (noteId: string) => {
     const token = localStorage.getItem("token");
@@ -146,13 +172,20 @@ export default function DashboardPage() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {user && (
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">
-                  {getInitials(user.name)}
-                </span>
-              </div>
-            )}
+            {user &&
+              (user.image ? (
+                <img
+                  src={user.image}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">
+                    {getInitials(user.name)}
+                  </span>
+                </div>
+              ))}
             <span className="font-semibold text-gray-800">Dashboard</span>
           </div>
           <button
